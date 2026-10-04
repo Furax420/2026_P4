@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { authService } from '../services/auth.service';
 
@@ -21,6 +21,7 @@ function Profile() {
   }, []);
 
   const fetchUserInfo = async (): Promise<any> => {
+    if (!user) return;
     try {
       setLoading(true);
       const response = await api.get(`/user/${user.id}`, {
@@ -38,6 +39,7 @@ function Profile() {
   };
 
   const handleDeleteAccount = async (): Promise<any> => {
+    if (!user) return;
     if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       return;
     }
@@ -78,6 +80,10 @@ function Profile() {
       setPromoteLoading(false);
     }
   };
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
   if (loading) {
     return (

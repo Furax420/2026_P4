@@ -1,3 +1,4 @@
+import type { JSX, ReactElement } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
@@ -8,12 +9,16 @@ import SessionForm from './pages/SessionForm';
 import Profile from './pages/Profile';
 import { authService } from './services/auth.service';
 
-function PrivateRoute({ children }: any) {
+interface PrivateRouteProps {
+  children: ReactElement;
+}
+
+function PrivateRoute({ children }: PrivateRouteProps): JSX.Element {
   const isAuthenticated = authService.isAuthenticated();
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
-function App() {
+function App(): JSX.Element {
   return (
     <Router>
       <div className="min-h-screen bg-gray-100">

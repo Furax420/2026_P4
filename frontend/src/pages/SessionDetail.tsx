@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Navigate, useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { authService } from '../services/auth.service';
 import { Session } from '../types';
@@ -35,6 +35,7 @@ function SessionDetail() {
   };
 
   const handleParticipate = async (): Promise<any> => {
+    if (!user) return;
     try {
       await api.post(
         `/session/${id}/participate/${user.id}`,
@@ -53,6 +54,7 @@ function SessionDetail() {
   };
 
   const handleUnparticipate = async (): Promise<any> => {
+    if (!user) return;
     try {
       await api.delete(`/session/${id}/participate/${user.id}`, {
         headers: {
@@ -83,6 +85,11 @@ function SessionDetail() {
       console.error(err);
     }
   };
+
+  // A token can exist even when the saved user is missing.
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
 
   if (loading) {
     return (

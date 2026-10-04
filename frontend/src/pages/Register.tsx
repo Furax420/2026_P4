@@ -1,26 +1,29 @@
 import { useState } from 'react';
+import type { ChangeEvent, FormEvent, JSX } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/auth.service';
+import { getApiErrorMessage } from '../services/api';
+import type { RegisterData } from '../types';
 
-function Register() {
+function Register(): JSX.Element {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<RegisterData>({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
   });
-  const [error, setError] = useState<any>('');
-  const [loading, setLoading] = useState<any>(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: any): any => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e: any): Promise<any> => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -28,8 +31,8 @@ function Register() {
     try {
       await authService.register(formData);
       navigate('/sessions');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Registration failed'));
     } finally {
       setLoading(false);
     }
@@ -42,11 +45,11 @@ function Register() {
           Register for Yoga Studio
         </h2>
 
-        {error ? (
+        {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
           </div>
-        ) : null}
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
