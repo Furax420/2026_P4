@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
+import type { JSX } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { authService } from '../services/auth.service';
+import type { UserProfile } from '../types';
 
-function Profile() {
+function Profile(): JSX.Element {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState<any>(null);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>('');
-  const [promoteLoading, setPromoteLoading] = useState<any>(false);
-  const [promoteError, setPromoteError] = useState<any>('');
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [promoteLoading, setPromoteLoading] = useState(false);
+  const [promoteError, setPromoteError] = useState('');
   const user = authService.getCurrentUser();
   const token = authService.getToken();
-  const isDev = (import.meta as any).env?.DEV === true;
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
     if (user) {
@@ -20,17 +22,17 @@ function Profile() {
     }
   }, []);
 
-  const fetchUserInfo = async (): Promise<any> => {
+  const fetchUserInfo = async (): Promise<void> => {
     if (!user) return;
     try {
       setLoading(true);
-      const response = await api.get(`/user/${user.id}`, {
+      const response = await api.get<UserProfile>(`/user/${user.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       setUserInfo(response.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to load user information');
       console.error(err);
     } finally {
@@ -38,7 +40,7 @@ function Profile() {
     }
   };
 
-  const handleDeleteAccount = async (): Promise<any> => {
+  const handleDeleteAccount = async (): Promise<void> => {
     if (!user) return;
     if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       return;
@@ -52,17 +54,17 @@ function Profile() {
       });
       authService.logout();
       navigate('/login');
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert('Failed to delete account');
       console.error(err);
     }
   };
 
-  const handlePromoteAdmin = async (): Promise<any> => {
+  const handlePromoteAdmin = async (): Promise<void> => {
     try {
       setPromoteError('');
       setPromoteLoading(true);
-      const response = await api.post(
+      const response = await api.post<UserProfile>(
         '/user/promote-admin',
         {},
         {
@@ -73,7 +75,7 @@ function Profile() {
       );
       setUserInfo(response.data);
       authService.updateCurrentUser({ admin: response.data.admin });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setPromoteError('Failed to promote to admin');
       console.error(err);
     } finally {

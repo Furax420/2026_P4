@@ -8,6 +8,12 @@ export interface User {
   updatedAt?: string;
 }
 
+// Profile endpoints always return both dates.
+export interface UserProfile extends User {
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Teacher {
   id: number;
   firstName: string;

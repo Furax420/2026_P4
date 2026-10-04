@@ -1,23 +1,29 @@
 import { useState, useEffect } from 'react';
+import type { ChangeEvent, FormEvent, JSX } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../services/api';
+import api, { getApiErrorMessage } from '../services/api';
 import { authService } from '../services/auth.service';
-import { Teacher, Session } from '../types';
+import type { Teacher, Session, SessionFormData } from '../types';
 
-function SessionForm() {
+// The empty option belongs to the form, not to the API payload.
+interface SessionFormValues extends Omit<SessionFormData, 'teacherId'> {
+  teacherId: number | '';
+}
+
+function SessionForm(): JSX.Element {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = !!id;
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<SessionFormValues>({
     name: '',
     date: '',
     description: '',
     teacherId: '',
   });
-  const [teachers, setTeachers] = useState<any>([]);
-  const [loading, setLoading] = useState<any>(false);
-  const [error, setError] = useState<any>('');
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const user = authService.getCurrentUser();
   const token = authService.getToken();
 
@@ -35,7 +41,7 @@ function SessionForm() {
     }
   }, [id]);
 
-  const fetchTeachers = async (): Promise<any> => {
+  const fetchTeachers = async (): Promise<void> => {
     try {
       const response = await api.get<Teacher[]>('/teacher', {
         headers: {
@@ -43,12 +49,12 @@ function SessionForm() {
         },
       });
       setTeachers(response.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to fetch teachers', err);
     }
   };
 
-  const fetchSession = async (): Promise<any> => {
+  const fetchSession = async (): Promise<void> => {
     try {
       const response = await api.get<Session>(`/session/${id}`, {
         headers: {
@@ -62,43 +68,50 @@ function SessionForm() {
         description: session.description,
         teacherId: session.teacher.id,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to load session');
       console.error(err);
     }
   };
 
-  const handleChange = (e: any): any => {
-    const value =
-      e.target.name === 'teacherId' ? parseInt(e.target.value) : e.target.value;
-    setFormData({
-      ...formData,
-      [e.target.name]: value,
-    });
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ): void => {
+    const { name, value } = e.target;
+    if (name === 'teacherId') {
+      setFormData({ ...formData, teacherId: value === '' ? '' : Number(value) });
+    } else if (name === 'name' || name === 'date' || name === 'description') {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
-  const handleSubmit = async (e: any): Promise<any> => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
+    if (formData.teacherId === '') {
+      setError('Please select a teacher');
+      return;
+    }
+    const data: SessionFormData = { ...formData, teacherId: formData.teacherId };
     setLoading(true);
 
     try {
       if (isEditMode) {
-        await api.put(`/session/${id}`, formData, {
+        await api.put(`/session/${id}`, data, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
       } else {
-        await api.post('/session', formData, {
+        await api.post('/session', data, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
       }
       navigate('/sessions');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save session');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to save session'));
     } finally {
       setLoading(false);
     }
@@ -159,7 +172,7 @@ function SessionForm() {
                 required
               >
                 <option value="">Select a teacher</option>
-                {teachers.map((teacher: any) => (
+                {teachers.map((teacher): JSX.Element => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.firstName} {teacher.lastName}
                   </option>

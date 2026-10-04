@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
+import type { JSX } from 'react';
 import { Navigate, useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { authService } from '../services/auth.service';
-import { Session } from '../types';
+import type { Session } from '../types';
 
-function SessionDetail() {
+function SessionDetail(): JSX.Element {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>('');
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const user = authService.getCurrentUser();
   const token = authService.getToken();
 
@@ -17,7 +18,7 @@ function SessionDetail() {
     fetchSession();
   }, [id]);
 
-  const fetchSession = async (): Promise<any> => {
+  const fetchSession = async (): Promise<void> => {
     try {
       setLoading(true);
       const response = await api.get<Session>(`/session/${id}`, {
@@ -26,7 +27,7 @@ function SessionDetail() {
         },
       });
       setSession(response.data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Failed to load session details');
       console.error(err);
     } finally {
@@ -34,7 +35,7 @@ function SessionDetail() {
     }
   };
 
-  const handleParticipate = async (): Promise<any> => {
+  const handleParticipate = async (): Promise<void> => {
     if (!user) return;
     try {
       await api.post(
@@ -47,13 +48,13 @@ function SessionDetail() {
         }
       );
       fetchSession();
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert('Failed to join session');
       console.error(err);
     }
   };
 
-  const handleUnparticipate = async (): Promise<any> => {
+  const handleUnparticipate = async (): Promise<void> => {
     if (!user) return;
     try {
       await api.delete(`/session/${id}/participate/${user.id}`, {
@@ -62,13 +63,13 @@ function SessionDetail() {
         },
       });
       fetchSession();
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert('Failed to leave session');
       console.error(err);
     }
   };
 
-  const handleDelete = async (): Promise<any> => {
+  const handleDelete = async (): Promise<void> => {
     if (!window.confirm('Are you sure you want to delete this session?')) {
       return;
     }
@@ -80,7 +81,7 @@ function SessionDetail() {
         },
       });
       navigate('/sessions');
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert('Failed to delete session');
       console.error(err);
     }
