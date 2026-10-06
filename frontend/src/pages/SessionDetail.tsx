@@ -1,40 +1,56 @@
-import { useState, useEffect } from 'react';
-import type { JSX } from 'react';
-import { Navigate, useParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
-import { authService } from '../services/auth.service';
-import type { Session } from '../types';
+import { useState, useEffect } from "react";
+import type { JSX } from "react";
+import { Navigate, useParams, useNavigate } from "react-router-dom";
+import api from "../services/api";
+import { authService } from "../services/auth.service";
+import type { Session } from "../types";
 
 function SessionDetail(): JSX.Element {
   const { id } = useParams();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [refreshCount, setRefreshCount] = useState(0);
   const user = authService.getCurrentUser();
   const token = authService.getToken();
 
   useEffect(() => {
-    fetchSession();
-  }, [id]);
+    const controller = new AbortController();
 
-  const fetchSession = async (): Promise<void> => {
-    try {
+    const loadSession = async (): Promise<void> => {
       setLoading(true);
-      const response = await api.get<Session>(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSession(response.data);
-    } catch (err: unknown) {
-      setError('Failed to load session details');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setError("");
 
+      try {
+        const response = await api.get<Session>(`/session/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) {
+          setSession(response.data);
+        }
+      } catch (err: unknown) {
+        // Cancellation is expected when leaving the page.
+        if (controller.signal.aborted) return;
+
+        setError("Failed to load session details");
+        console.error(err);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadSession();
+
+    // Stop the previous request before loading another session.
+    return () => controller.abort();
+  }, [id, token, refreshCount]);
   const handleParticipate = async (): Promise<void> => {
     if (!user) return;
     try {
@@ -45,11 +61,11 @@ function SessionDetail(): JSX.Element {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
-      fetchSession();
+      setRefreshCount((count) => count + 1);
     } catch (err: unknown) {
-      alert('Failed to join session');
+      alert("Failed to join session");
       console.error(err);
     }
   };
@@ -62,15 +78,15 @@ function SessionDetail(): JSX.Element {
           Authorization: `Bearer ${token}`,
         },
       });
-      fetchSession();
+      setRefreshCount((count) => count + 1);
     } catch (err: unknown) {
-      alert('Failed to leave session');
+      alert("Failed to leave session");
       console.error(err);
     }
   };
 
   const handleDelete = async (): Promise<void> => {
-    if (!window.confirm('Are you sure you want to delete this session?')) {
+    if (!window.confirm("Are you sure you want to delete this session?")) {
       return;
     }
 
@@ -80,9 +96,9 @@ function SessionDetail(): JSX.Element {
           Authorization: `Bearer ${token}`,
         },
       });
-      navigate('/sessions');
+      navigate("/sessions");
     } catch (err: unknown) {
-      alert('Failed to delete session');
+      alert("Failed to delete session");
       console.error(err);
     }
   };
@@ -104,7 +120,7 @@ function SessionDetail(): JSX.Element {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error || 'Session not found'}
+          {error || "Session not found"}
         </div>
       </div>
     );
@@ -121,19 +137,21 @@ function SessionDetail(): JSX.Element {
           </h1>
 
           <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">Details</h2>
+            <h2 className="text-xl font-semibold text-gray-700 mb-2">
+              Details
+            </h2>
             <div className="space-y-2 text-gray-600">
               <p>
-                <strong>Date:</strong>{' '}
-                {new Date(session.date).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
+                <strong>Date:</strong>{" "}
+                {new Date(session.date).toLocaleDateString("en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </p>
               <p>
-                <strong>Teacher:</strong> {session.teacher.firstName}{' '}
+                <strong>Teacher:</strong> {session.teacher.firstName}{" "}
                 {session.teacher.lastName}
               </p>
               <p>
@@ -188,7 +206,7 @@ function SessionDetail(): JSX.Element {
             )}
 
             <button
-              onClick={() => navigate('/sessions')}
+              onClick={() => navigate("/sessions")}
               className="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400"
             >
               Back to Sessions

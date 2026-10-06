@@ -1,48 +1,67 @@
-import { useState, useEffect } from 'react';
-import type { JSX } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
-import api from '../services/api';
-import { authService } from '../services/auth.service';
-import type { UserProfile } from '../types';
+import { useState, useEffect } from "react";
+import type { JSX } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import api from "../services/api";
+import { authService } from "../services/auth.service";
+import type { UserProfile } from "../types";
 
 function Profile(): JSX.Element {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [promoteLoading, setPromoteLoading] = useState(false);
-  const [promoteError, setPromoteError] = useState('');
+  const [promoteError, setPromoteError] = useState("");
   const user = authService.getCurrentUser();
+  const userId = user?.id;
   const token = authService.getToken();
   const isDev = import.meta.env.DEV;
 
   useEffect(() => {
-    if (user) {
-      fetchUserInfo();
-    }
-  }, []);
+    if (userId === undefined) return;
 
-  const fetchUserInfo = async (): Promise<void> => {
-    if (!user) return;
-    try {
+    const controller = new AbortController();
+
+    const loadUserInfo = async (): Promise<void> => {
       setLoading(true);
-      const response = await api.get<UserProfile>(`/user/${user.id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setUserInfo(response.data);
-    } catch (err: unknown) {
-      setError('Failed to load user information');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setError("");
+
+      try {
+        const response = await api.get<UserProfile>(`/user/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) {
+          setUserInfo(response.data);
+        }
+      } catch (err: unknown) {
+        // Cancellation is expected when leaving the profile.
+        if (controller.signal.aborted) return;
+
+        setError("Failed to load user information");
+        console.error(err);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadUserInfo();
+
+    return () => controller.abort();
+  }, [userId, token]);
 
   const handleDeleteAccount = async (): Promise<void> => {
     if (!user) return;
-    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
@@ -53,19 +72,19 @@ function Profile(): JSX.Element {
         },
       });
       authService.logout();
-      navigate('/login');
+      navigate("/login");
     } catch (err: unknown) {
-      alert('Failed to delete account');
+      alert("Failed to delete account");
       console.error(err);
     }
   };
 
   const handlePromoteAdmin = async (): Promise<void> => {
     try {
-      setPromoteError('');
+      setPromoteError("");
       setPromoteLoading(true);
       const response = await api.post<UserProfile>(
-        '/user/promote-admin',
+        "/user/promote-admin",
         {},
         {
           headers: {
@@ -76,7 +95,7 @@ function Profile(): JSX.Element {
       setUserInfo(response.data);
       authService.updateCurrentUser({ admin: response.data.admin });
     } catch (err: unknown) {
-      setPromoteError('Failed to promote to admin');
+      setPromoteError("Failed to promote to admin");
       console.error(err);
     } finally {
       setPromoteLoading(false);
@@ -99,7 +118,7 @@ function Profile(): JSX.Element {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error || 'Failed to load profile'}
+          {error || "Failed to load profile"}
         </div>
       </div>
     );
@@ -155,10 +174,12 @@ function Profile(): JSX.Element {
                     disabled={promoteLoading}
                     className="bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 disabled:opacity-60"
                   >
-                    {promoteLoading ? 'Promoting...' : 'Promote to Admin (Dev)'}
+                    {promoteLoading ? "Promoting..." : "Promote to Admin (Dev)"}
                   </button>
                   {promoteError ? (
-                    <div className="mt-2 text-sm text-red-600">{promoteError}</div>
+                    <div className="mt-2 text-sm text-red-600">
+                      {promoteError}
+                    </div>
                   ) : null}
                 </div>
               ) : null}
@@ -169,10 +190,10 @@ function Profile(): JSX.Element {
                 Member Since
               </label>
               <p className="text-lg text-gray-800">
-                {new Date(userInfo.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
+                {new Date(userInfo.createdAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </p>
             </div>
@@ -180,7 +201,7 @@ function Profile(): JSX.Element {
 
           <div className="flex space-x-4">
             <button
-              onClick={() => navigate('/sessions')}
+              onClick={() => navigate("/sessions")}
               className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700"
             >
               Back to Sessions

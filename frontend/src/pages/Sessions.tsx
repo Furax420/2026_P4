@@ -1,40 +1,57 @@
-import { useState, useEffect } from 'react';
-import type { JSX } from 'react';
-import { Link } from 'react-router-dom';
-import api from '../services/api';
-import { authService } from '../services/auth.service';
-import type { Session } from '../types';
+import { useState, useEffect } from "react";
+import type { JSX } from "react";
+import { Link } from "react-router-dom";
+import api from "../services/api";
+import { authService } from "../services/auth.service";
+import type { Session } from "../types";
 
 function Sessions(): JSX.Element {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [refreshCount, setRefreshCount] = useState(0);
   const user = authService.getCurrentUser();
   const token = authService.getToken();
 
   useEffect(() => {
-    fetchSessions();
-  }, []);
+    const controller = new AbortController();
 
-  const fetchSessions = async (): Promise<void> => {
-    try {
+    const loadSessions = async (): Promise<void> => {
       setLoading(true);
-      const response = await api.get<Session[]>('/session', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSessions(response.data);
-    } catch (err: unknown) {
-      setError('Failed to load sessions');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      setError("");
+
+      try {
+        const response = await api.get<Session[]>("/session", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) {
+          setSessions(response.data);
+        }
+      } catch (err: unknown) {
+        // Cancellation is expected when leaving the page.
+        if (controller.signal.aborted) return;
+
+        setError("Failed to load sessions");
+        console.error(err);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadSessions();
+
+    // Stop the request when this effect is cleaned up.
+    return () => controller.abort();
+  }, [token, refreshCount]);
 
   const handleDelete = async (sessionId: number): Promise<void> => {
-    if (!window.confirm('Are you sure you want to delete this session?')) {
+    if (!window.confirm("Are you sure you want to delete this session?")) {
       return;
     }
 
@@ -44,9 +61,9 @@ function Sessions(): JSX.Element {
           Authorization: `Bearer ${token}`,
         },
       });
-      fetchSessions();
+      setRefreshCount((count) => count + 1);
     } catch (err: unknown) {
-      alert('Failed to delete session');
+      alert("Failed to delete session");
       console.error(err);
     }
   };
@@ -90,43 +107,49 @@ function Sessions(): JSX.Element {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sessions.map((session): JSX.Element => (
-              <div key={session.id} className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  {session.name}
-                </h3>
-                <p className="text-gray-600 mb-2">
-                  Date: {new Date(session.date).toLocaleDateString()}
-                </p>
-                <p className="text-gray-600 mb-2">
-                  Teacher: {session.teacher.firstName} {session.teacher.lastName}
-                </p>
-                <p className="text-gray-600 mb-4">
-                  Participants: {session.users.length}
-                </p>
-                <p className="text-gray-700 mb-4 line-clamp-3">
-                  {session.description}
-                </p>
+            {sessions.map(
+              (session): JSX.Element => (
+                <div
+                  key={session.id}
+                  className="bg-white rounded-lg shadow-md p-6"
+                >
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    {session.name}
+                  </h3>
+                  <p className="text-gray-600 mb-2">
+                    Date: {new Date(session.date).toLocaleDateString()}
+                  </p>
+                  <p className="text-gray-600 mb-2">
+                    Teacher: {session.teacher.firstName}{" "}
+                    {session.teacher.lastName}
+                  </p>
+                  <p className="text-gray-600 mb-4">
+                    Participants: {session.users.length}
+                  </p>
+                  <p className="text-gray-700 mb-4 line-clamp-3">
+                    {session.description}
+                  </p>
 
-                <div className="flex space-x-2">
-                  <Link
-                    to={`/sessions/${session.id}`}
-                    className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded text-center hover:bg-indigo-700"
-                  >
-                    View Details
-                  </Link>
-
-                  {user && user.admin ? (
-                    <button
-                      onClick={() => handleDelete(session.id)}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  <div className="flex space-x-2">
+                    <Link
+                      to={`/sessions/${session.id}`}
+                      className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded text-center hover:bg-indigo-700"
                     >
-                      Delete
-                    </button>
-                  ) : null}
+                      View Details
+                    </Link>
+
+                    {user && user.admin ? (
+                      <button
+                        onClick={() => handleDelete(session.id)}
+                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                      >
+                        Delete
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         )}
       </div>

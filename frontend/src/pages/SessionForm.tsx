@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import type { ChangeEvent, FormEvent, JSX } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import api, { getApiErrorMessage } from '../services/api';
-import { authService } from '../services/auth.service';
-import type { Teacher, Session, SessionFormData } from '../types';
+import { useState, useEffect } from "react";
+import type { ChangeEvent, FormEvent, JSX } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import api, { getApiErrorMessage } from "../services/api";
+import { authService } from "../services/auth.service";
+import type { Teacher, Session, SessionFormData } from "../types";
 
 // The empty option belongs to the form, not to the API payload.
-interface SessionFormValues extends Omit<SessionFormData, 'teacherId'> {
-  teacherId: number | '';
+interface SessionFormValues extends Omit<SessionFormData, "teacherId"> {
+  teacherId: number | "";
 }
 
 function SessionForm(): JSX.Element {
@@ -16,83 +16,118 @@ function SessionForm(): JSX.Element {
   const isEditMode = !!id;
 
   const [formData, setFormData] = useState<SessionFormValues>({
-    name: '',
-    date: '',
-    description: '',
-    teacherId: '',
+    name: "",
+    date: "",
+    description: "",
+    teacherId: "",
   });
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const user = authService.getCurrentUser();
+  const isAdmin = user?.admin === true;
   const token = authService.getToken();
 
   // Redirect if not admin
   useEffect(() => {
-    if (!user || !user.admin) {
-      navigate('/sessions');
+    if (!isAdmin) {
+      navigate("/sessions");
     }
-  }, [user, navigate]);
+  }, [isAdmin, navigate]);
 
   useEffect(() => {
-    fetchTeachers();
-    if (isEditMode) {
-      fetchSession();
-    }
-  }, [id]);
+    if (!isAdmin) return;
 
-  const fetchTeachers = async (): Promise<void> => {
-    try {
-      const response = await api.get<Teacher[]>('/teacher', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setTeachers(response.data);
-    } catch (err: unknown) {
-      console.error('Failed to fetch teachers', err);
-    }
-  };
+    const controller = new AbortController();
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
 
-  const fetchSession = async (): Promise<void> => {
-    try {
-      const response = await api.get<Session>(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const session = response.data;
+    setError("");
+
+    const loadTeachers = async (): Promise<void> => {
+      try {
+        const response = await api.get<Teacher[]>("/teacher", {
+          headers,
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) {
+          setTeachers(response.data);
+        }
+      } catch (err: unknown) {
+        if (controller.signal.aborted) return;
+        console.error("Failed to fetch teachers", err);
+      }
+    };
+
+    const loadSession = async (): Promise<void> => {
+      try {
+        const response = await api.get<Session>(`/session/${id}`, {
+          headers,
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        const session = response.data;
+        setFormData({
+          name: session.name,
+          date: new Date(session.date).toISOString().split("T")[0],
+          description: session.description,
+          teacherId: session.teacher.id,
+        });
+      } catch (err: unknown) {
+        if (controller.signal.aborted) return;
+
+        setError("Failed to load session");
+        console.error(err);
+      }
+    };
+
+    void loadTeachers();
+
+    if (id) {
+      void loadSession();
+    } else {
+      // Clear previous values when opening the creation form.
       setFormData({
-        name: session.name,
-        date: new Date(session.date).toISOString().split('T')[0],
-        description: session.description,
-        teacherId: session.teacher.id,
+        name: "",
+        date: "",
+        description: "",
+        teacherId: "",
       });
-    } catch (err: unknown) {
-      setError('Failed to load session');
-      console.error(err);
     }
-  };
+
+    // Cancel both requests when leaving or changing the session.
+    return () => controller.abort();
+  }, [id, token, isAdmin]);
 
   const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ): void => {
     const { name, value } = e.target;
-    if (name === 'teacherId') {
-      setFormData({ ...formData, teacherId: value === '' ? '' : Number(value) });
-    } else if (name === 'name' || name === 'date' || name === 'description') {
+    if (name === "teacherId") {
+      setFormData({
+        ...formData,
+        teacherId: value === "" ? "" : Number(value),
+      });
+    } else if (name === "name" || name === "date" || name === "description") {
       setFormData({ ...formData, [name]: value });
     }
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    setError('');
-    if (formData.teacherId === '') {
-      setError('Please select a teacher');
+    setError("");
+    if (formData.teacherId === "") {
+      setError("Please select a teacher");
       return;
     }
-    const data: SessionFormData = { ...formData, teacherId: formData.teacherId };
+    const data: SessionFormData = {
+      ...formData,
+      teacherId: formData.teacherId,
+    };
     setLoading(true);
 
     try {
@@ -103,15 +138,15 @@ function SessionForm(): JSX.Element {
           },
         });
       } else {
-        await api.post('/session', data, {
+        await api.post("/session", data, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
       }
-      navigate('/sessions');
+      navigate("/sessions");
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, 'Failed to save session'));
+      setError(getApiErrorMessage(err, "Failed to save session"));
     } finally {
       setLoading(false);
     }
@@ -122,7 +157,7 @@ function SessionForm(): JSX.Element {
       <div className="container mx-auto px-4 max-w-2xl">
         <div className="bg-white rounded-lg shadow-md p-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-8">
-            {isEditMode ? 'Edit Session' : 'Create New Session'}
+            {isEditMode ? "Edit Session" : "Create New Session"}
           </h1>
 
           {error ? (
@@ -172,11 +207,13 @@ function SessionForm(): JSX.Element {
                 required
               >
                 <option value="">Select a teacher</option>
-                {teachers.map((teacher): JSX.Element => (
-                  <option key={teacher.id} value={teacher.id}>
-                    {teacher.firstName} {teacher.lastName}
-                  </option>
-                ))}
+                {teachers.map(
+                  (teacher): JSX.Element => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.firstName} {teacher.lastName}
+                    </option>
+                  ),
+                )}
               </select>
             </div>
 
@@ -200,11 +237,15 @@ function SessionForm(): JSX.Element {
                 disabled={loading}
                 className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
               >
-                {loading ? 'Saving...' : isEditMode ? 'Update Session' : 'Create Session'}
+                {loading
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Session"
+                    : "Create Session"}
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/sessions')}
+                onClick={() => navigate("/sessions")}
                 className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400"
               >
                 Cancel
