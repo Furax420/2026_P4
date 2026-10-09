@@ -1,8 +1,7 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { Response } from "express";
+import { AuthRequest } from "../middleware/auth.middleware";
 
-const prisma = new PrismaClient();
+import { prisma } from "../database/prisma";
 
 export class UserController {
   async getById(req: AuthRequest, res: Response) {
@@ -10,13 +9,13 @@ export class UserController {
       const { id } = req.params as { id: string };
 
       if (!id) {
-        return res.status(400).json({ message: 'User ID is required' });
+        return res.status(400).json({ message: "User ID is required" });
       }
 
       const userId = parseInt(id);
 
       if (isNaN(userId)) {
-        return res.status(400).json({ message: 'Invalid user ID' });
+        return res.status(400).json({ message: "Invalid user ID" });
       }
 
       const user = await prisma.user.findUnique({
@@ -24,7 +23,7 @@ export class UserController {
       });
 
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       const response: any = {
@@ -39,8 +38,8 @@ export class UserController {
 
       return res.status(200).json(response);
     } catch (error: any) {
-      console.error('Get user error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error("Get user error:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 
@@ -49,17 +48,19 @@ export class UserController {
       const { id } = req.params as { id: string };
 
       if (!id) {
-        return res.status(400).json({ message: 'User ID is required' });
+        return res.status(400).json({ message: "User ID is required" });
       }
 
       const userId = parseInt(id);
 
       if (isNaN(userId)) {
-        return res.status(400).json({ message: 'Invalid user ID' });
+        return res.status(400).json({ message: "Invalid user ID" });
       }
 
       if (req.userId !== userId) {
-        return res.status(403).json({ message: 'You can only delete your own account' });
+        return res
+          .status(403)
+          .json({ message: "You can only delete your own account" });
       }
 
       const user = await prisma.user.findUnique({
@@ -67,29 +68,33 @@ export class UserController {
       });
 
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       await prisma.user.delete({
         where: { id: userId },
       });
 
-      return res.status(200).json({ message: 'User deleted successfully' });
+      return res.status(200).json({ message: "User deleted successfully" });
     } catch (error: any) {
-      console.error('Delete user error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error("Delete user error:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 
   async promoteSelfToAdmin(req: AuthRequest, res: Response) {
     try {
-      const isDev = (process.env.NODE_ENV || 'development') === 'development';
+      const isDev = (process.env.NODE_ENV || "development") === "development";
       if (!isDev) {
-        return res.status(403).json({ message: 'Admin self-promotion is only available in development' });
+        return res
+          .status(403)
+          .json({
+            message: "Admin self-promotion is only available in development",
+          });
       }
 
       if (!req.userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       const user = await prisma.user.findUnique({
@@ -97,7 +102,7 @@ export class UserController {
       });
 
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       if (user.admin) {
@@ -127,8 +132,8 @@ export class UserController {
         updatedAt: updatedUser.updatedAt,
       });
     } catch (error: any) {
-      console.error('Promote user error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error("Promote user error:", error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 }

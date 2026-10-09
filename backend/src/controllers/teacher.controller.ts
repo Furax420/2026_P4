@@ -1,67 +1,59 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { Response } from "express";
+import { AuthRequest } from "../middleware/auth.middleware";
+import { AppError } from "../utils/app-error";
 
-const prisma = new PrismaClient();
-
+import { prisma } from "../database/prisma";
 export class TeacherController {
-  async getAll(req: AuthRequest, res: Response) {
-    try {
-      const teachers = await prisma.teacher.findMany({
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+  async getAll(_req: AuthRequest, res: Response): Promise<void> {
+    const teachers = await prisma.teacher.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-      const response: any = teachers.map((teacher: any) => ({
-        id: teacher.id,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
-        createdAt: teacher.createdAt,
-        updatedAt: teacher.updatedAt,
-      }));
+    const response = teachers.map((teacher) => ({
+      id: teacher.id,
+      firstName: teacher.firstName,
+      lastName: teacher.lastName,
+      createdAt: teacher.createdAt,
+      updatedAt: teacher.updatedAt,
+    }));
 
-      return res.status(200).json(response);
-    } catch (error: any) {
-      console.error('Get teachers error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
+    res.status(200).json(response);
   }
+  async getById(req: AuthRequest, res: Response): Promise<void> {
+    const { id } = req.params;
 
-  async getById(req: AuthRequest, res: Response) {
-    try {
-      const { id } = req.params as { id: string };
-
-      if (!id) {
-        return res.status(400).json({ message: 'Teacher ID is required' });
-      }
-
-      const teacherId = parseInt(id);
-
-      if (isNaN(teacherId)) {
-        return res.status(400).json({ message: 'Invalid teacher ID' });
-      }
-
-      const teacher = await prisma.teacher.findUnique({
-        where: { id: teacherId },
-      });
-
-      if (!teacher) {
-        return res.status(404).json({ message: 'Teacher not found' });
-      }
-
-      const response: any = {
-        id: teacher.id,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
-        createdAt: teacher.createdAt,
-        updatedAt: teacher.updatedAt,
-      };
-
-      return res.status(200).json(response);
-    } catch (error: any) {
-      console.error('Get teacher error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+    if (!id) {
+      throw new AppError("Teacher ID is required", 400);
     }
+
+    if (typeof id !== "string") {
+      throw new AppError("Invalid teacher ID", 400);
+    }
+
+    const teacherId = parseInt(id);
+
+    if (isNaN(teacherId)) {
+      throw new AppError("Invalid teacher ID", 400);
+    }
+
+    const teacher = await prisma.teacher.findUnique({
+      where: { id: teacherId },
+    });
+
+    if (!teacher) {
+      throw new AppError("Teacher not found", 404);
+    }
+
+    const response = {
+      id: teacher.id,
+      firstName: teacher.firstName,
+      lastName: teacher.lastName,
+      createdAt: teacher.createdAt,
+      updatedAt: teacher.updatedAt,
+    };
+
+    res.status(200).json(response);
   }
 }
