@@ -13,3 +13,5 @@ function createIdSchema(resource: string): z.ZodType<number> {
 
 export const UserIdSchema = createIdSchema('User');
 export const TeacherIdSchema = createIdSchema('Teacher');
+
+export const SessionIdSchema = createIdSchema('Session');

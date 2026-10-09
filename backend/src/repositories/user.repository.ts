@@ -12,6 +12,11 @@ export class UserRepository {
     return prisma.user.findUnique({ where: { id } });
   }
 
+  async exists(id: number): Promise<boolean> {
+    const user = await prisma.user.findUnique({ where: { id }, select: { id: true } });
+    return user !== null;
+  }
+
   async create(data: Prisma.UserCreateInput): Promise<User> {
     try {
       return await prisma.user.create({ data });
