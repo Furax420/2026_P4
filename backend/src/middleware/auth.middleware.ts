@@ -1,27 +1,28 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
+import { AppError } from '../utils/app-error';
 import { verifyToken } from '../utils/jwt.util';
 
 export interface AuthRequest extends Request {
   userId?: number;
 }
 
-export function authMiddleware(req: AuthRequest, res: Response, next: NextFunction) {
+export function authMiddleware(req: AuthRequest, _res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
-
   if (!authHeader) {
-    return res.status(401).json({ message: 'No token provided' });
+    next(new AppError('No token provided', 401));
+    return;
   }
 
-  const token = authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Invalid token format' });
+  const parts = authHeader.trim().split(/\s+/);
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer' || !parts[1]) {
+    next(new AppError('Invalid token format', 401));
+    return;
   }
 
-  const decoded: any = verifyToken(token);
-
+  const decoded = verifyToken(parts[1]);
   if (!decoded) {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    next(new AppError('Invalid or expired token', 401));
+    return;
   }
 
   req.userId = decoded.userId;
