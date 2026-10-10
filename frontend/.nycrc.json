@@ -1,0 +1,12 @@
+{
+  "extension": [".ts", ".tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/*.d.ts", "src/types/**"],
+  "report-dir": "coverage/e2e",
+  "temp-dir": ".nyc_output/e2e",
+  "reporter": ["text", "html", "lcov", "json-summary"],
+  "statements": 80,
+  "branches": 80,
+  "functions": 80,
+  "lines": 80
+}

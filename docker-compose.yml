@@ -18,5 +18,23 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres-test:
+    image: postgres:16-alpine
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: yogatest
+      POSTGRES_PASSWORD: yogatest
+      POSTGRES_DB: yogastudio_test
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yogatest -d yogastudio_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
+  postgres_test_data:
