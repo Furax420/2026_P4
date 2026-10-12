@@ -6,6 +6,7 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     clearMocks: true,
     restoreMocks: true,
+    unstubEnvs: true,
     fileParallelism: false,
     env: {
       NODE_ENV: "test",
