@@ -12,7 +12,8 @@
     "e2e:run": "cypress run",
     "e2e:coverage:check": "nyc check-coverage",
     "dev:e2e": "cross-env VITE_COVERAGE=true vite --strictPort",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:typecheck": "tsc -p tsconfig.test.json"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

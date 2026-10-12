@@ -10,6 +10,8 @@ export default mergeConfig(
       include: ["tests/**/*.test.{ts,tsx}"],
       clearMocks: true,
       restoreMocks: true,
+      unstubEnvs: true,
+      maxWorkers: 2,
       coverage: {
         provider: "v8",
         reportsDirectory: "coverage/vitest",
