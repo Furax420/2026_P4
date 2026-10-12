@@ -16,7 +16,10 @@
     "test:db:migrate": "node scripts/migrate-test-db.cjs",
     "prisma:studio": "prisma studio",
     "test:typecheck": "tsc -p tsconfig.test.json",
-    "dev:e2e": "node scripts/start-test-server.cjs"
+    "dev:e2e": "node scripts/start-test-server.cjs",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:ratio": "node ../scripts/check-integration-ratio.cjs backend"
   },
   "keywords": [],
   "author": "",

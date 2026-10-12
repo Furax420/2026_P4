@@ -7,6 +7,8 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     unstubEnvs: true,
+    reporters: ["default", "json"],
+    outputFile: { json: "coverage/test-results.json" },
     fileParallelism: false,
     env: {
       NODE_ENV: "test",

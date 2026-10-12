@@ -10,10 +10,15 @@
     "test:coverage": "vitest run --coverage",
     "e2e:open": "cypress open",
     "e2e:run": "cypress run",
-    "e2e:coverage:check": "nyc check-coverage",
+    "pree2e:run": "node scripts/reset-e2e-coverage.cjs",
+    "e2e:coverage:check": "node scripts/check-e2e-coverage.cjs",
     "dev:e2e": "cross-env VITE_COVERAGE=true VITE_API_TARGET=http://localhost:8081 vite --strictPort",
     "preview": "vite preview",
-    "test:typecheck": "tsc -p tsconfig.test.json"
+    "test:typecheck": "tsc -p tsconfig.test.json",
+    "e2e:typecheck": "tsc -p cypress/tsconfig.json",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:ratio": "node ../scripts/check-integration-ratio.cjs frontend"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

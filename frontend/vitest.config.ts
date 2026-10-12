@@ -12,6 +12,8 @@ export default mergeConfig(
       restoreMocks: true,
       unstubEnvs: true,
       maxWorkers: 2,
+      reporters: ["default", "json"],
+      outputFile: { json: "coverage/vitest/test-results.json" },
       coverage: {
         provider: "v8",
         reportsDirectory: "coverage/vitest",
