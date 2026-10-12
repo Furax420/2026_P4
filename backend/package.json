@@ -15,7 +15,8 @@
     "test:coverage": "vitest run --coverage",
     "test:db:migrate": "node scripts/migrate-test-db.cjs",
     "prisma:studio": "prisma studio",
-    "test:typecheck": "tsc -p tsconfig.test.json"
+    "test:typecheck": "tsc -p tsconfig.test.json",
+    "dev:e2e": "node scripts/start-test-server.cjs"
   },
   "keywords": [],
   "author": "",

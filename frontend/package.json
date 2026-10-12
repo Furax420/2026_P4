@@ -11,7 +11,7 @@
     "e2e:open": "cypress open",
     "e2e:run": "cypress run",
     "e2e:coverage:check": "nyc check-coverage",
-    "dev:e2e": "cross-env VITE_COVERAGE=true vite --strictPort",
+    "dev:e2e": "cross-env VITE_COVERAGE=true VITE_API_TARGET=http://localhost:8081 vite --strictPort",
     "preview": "vite preview",
     "test:typecheck": "tsc -p tsconfig.test.json"
   },
@@ -28,6 +28,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^22.20.5",
     "@types/react": "^19.2.11",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.3",
