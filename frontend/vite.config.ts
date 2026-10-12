@@ -18,6 +18,10 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    // Generated reports must not reload the application during Cypress tests.
+    watch: {
+      ignored: ["**/coverage/**", "**/.nyc_output/**"],
+    },
     proxy: {
       "/api": {
         // E2E requests go to the test API; normal development keeps port 8080.
