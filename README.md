@@ -1,330 +1,135 @@
-# Yoga Studio Management System
+# Yoga Studio
 
-A full-stack web application for managing yoga studio operations, including session scheduling, teacher management, and user registrations.
+Application de rÃ©servation de sÃ©ances de yoga : connexion, inscription, profil et participation ; crÃ©ation, modification et suppression des sÃ©ances pour les administrateurs.
 
-## Tech Stack
+React 19 / TypeScript / Vite 7 cÃ´tÃ© front ; Express 4 / Prisma 5 / PostgreSQL 16 cÃ´tÃ© back. Architecture du back : controller â†’ service â†’ repository, avec validation Zod et gestion centrale des erreurs.
 
-### Backend
-- Node.js 22 LTS
-- Express.js 4.x
-- TypeScript 5.4+ (Strict Mode)
-- Prisma ORM
-- PostgreSQL 16
-- Zod (validation)
-- JWT (authentication)
-- bcrypt (password hashing)
+## Installation et lancement
 
-### Frontend
-- React 19 (Hooks only)
-- TypeScript 5.9+ (Strict Mode)
-- Vite 7.x
-- TailwindCSS 4.x
-- React Router 6.x
-- Axios
+PrÃ©requis : Node.js 22 LTS (22.17 ou plus rÃ©cent), npm et Docker Desktop lancÃ©. Les commandes suivantes fonctionnent dans PowerShell et se lancent depuis la racine du dÃ©pÃ´t, sauf indication contraire.
 
-### Infrastructure
-- Docker + Docker Compose
-- PostgreSQL container
-
-## Features
-
-### Authentication
-- User registration
-- User login with JWT tokens
-
-### Sessions Management
-- List all yoga sessions
-- View session details
-- Create new sessions (admin only)
-- Update sessions (admin only)
-- Delete sessions (admin only)
-- Join/leave sessions (regular users)
-
-### Teachers
-- View list of teachers
-- View teacher details
-
-### User Profile
-- View user profile
-- Delete user account
-
-## Prerequisites
-
-- Node.js 22 LTS or higher
-- Docker and Docker Compose
-- npm or yarn
-
-## Installation
-
-### 1. Clone the repository
-
-```bash
-cd p4-dfsjs-starter
-```
-
-### 2. Install Backend Dependencies
-
-```bash
+```powershell
+git clone https://github.com/Furax420/2026_P4.git
+cd 2026_P4
+docker compose up -d --wait postgres
 cd backend
-npm install
-```
-
-### 3. Install Frontend Dependencies
-
-```bash
-cd ../frontend
-npm install
-```
-
-### 4. Set up Environment Variables
-
-Create a `.env` file in the `backend` directory:
-
-```bash
-cd ../backend
-cp .env.example .env
-```
-
-The default configuration should work with Docker Compose:
-
-```env
-DATABASE_URL="postgresql://yogauser:yogapass@localhost:5432/yogastudio"
-JWT_SECRET="your-secret-key-change-me-in-production"
-PORT=8080
-NODE_ENV=development
-```
-
-### 5. Start PostgreSQL with Docker
-
-From the project root:
-
-```bash
-docker-compose up -d
-```
-
-This will start a PostgreSQL container on port 5432.
-
-### 6. Run Database Migrations
-
-```bash
-cd backend
+npm ci
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+npm run prisma:generate
 npm run prisma:migrate
-```
-
-### 7. Seed the Database
-
-```bash
 npm run prisma:seed
-```
-
-This will create:
-- 1 admin user: `yoga@studio.com` / `test!1234`
-- 1 regular user: `user@test.com` / `test!1234`
-- 3 teachers
-- 4 yoga sessions
-
-## Running the Application
-
-### Start the Backend (Terminal 1)
-
-```bash
-cd backend
 npm run dev
 ```
 
-The API will run on `http://localhost:8080`
+Le fichier `backend/.env` configure PostgreSQL de dÃ©veloppement sur 5432, le secret JWT et l'API sur 8080. Il reste hors Git. Les migrations sont versionnÃ©es ; le seed fournit les comptes de dÃ©monstration `yoga@studio.com` (admin) et `user@test.com` (utilisateur), mot de passe `test!1234`.
 
-### Start the Frontend (Terminal 2)
+Dans un second terminal, depuis la racine :
 
-```bash
+```powershell
 cd frontend
+npm ci
 npm run dev
 ```
 
-The frontend will run on `http://localhost:3000`
+Front : http://localhost:5173. API : http://localhost:8080/api/health. Le proxy Vite redirige `/api` vers l'API. Le port front est strict : arrÃªter un serveur existant avant d'en dÃ©marrer un second sur ce port.
 
-## Default Credentials
+## Tests front et back
 
-**Admin User:**
-- Email: `yoga@studio.com`
-- Password: `test!1234`
+Les tests sont dans `frontend/tests` et `backend/tests`, sÃ©parÃ©s de `src`. Chaque cas prÃ©pare ses donnÃ©es, exÃ©cute une action et vÃ©rifie un rÃ©sultat observable ; les commentaires utilisent Arrange / Act / Assert.
 
-**Regular User:**
-- Email: `user@test.com`
-- Password: `test!1234`
+- Front : Vitest, React Testing Library, user-event et jsdom. Les tests unitaires isolent les services ; les intÃ©grations font travailler ensemble pages, routeur et services avec les rÃ©ponses HTTP simulÃ©es.
+- Back : Vitest et Supertest. Les tests unitaires simulent les repositories ; les intÃ©grations API traversent rÃ©ellement Express, les services, Prisma et PostgreSQL.
+- Les DTO, schÃ©mas Zod et fichiers de types du back ne font pas l'objet de tests dÃ©diÃ©s et sont exclus de la couverture. Les saisies incorrectes restent vÃ©rifiÃ©es par les rÃ©ponses HTTP. Le point d'entrÃ©e `server.ts` est exclu : les tests utilisent directement `app.ts`, sans lancer le serveur habituel.
 
-## API Endpoints
+PrÃ©parer la base isolÃ©e, depuis la racine :
 
-### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login and get JWT token
-
-### Sessions
-- `GET /api/session` - Get all sessions (protected)
-- `GET /api/session/:id` - Get session by ID (protected)
-- `POST /api/session` - Create session (admin only)
-- `PUT /api/session/:id` - Update session (admin only)
-- `DELETE /api/session/:id` - Delete session (admin only)
-- `POST /api/session/:id/participate/:userId` - Join session (protected)
-- `DELETE /api/session/:id/participate/:userId` - Leave session (protected)
-
-### Teachers
-- `GET /api/teacher` - Get all teachers (protected)
-- `GET /api/teacher/:id` - Get teacher by ID (protected)
-
-### Users
-- `GET /api/user/:id` - Get user by ID (protected)
-- `DELETE /api/user/:id` - Delete user account (protected)
-
-## Database Schema
-
-```prisma
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  firstName String
-  lastName  String
-  password  String
-  admin     Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  sessions  SessionParticipation[]
-}
-
-model Teacher {
-  id        Int      @id @default(autoincrement())
-  firstName String
-  lastName  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  sessions  Session[]
-}
-
-model Session {
-  id          Int       @id @default(autoincrement())
-  name        String
-  date        DateTime
-  description String
-  teacherId   Int
-  teacher     Teacher   @relation(fields: [teacherId], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  participants SessionParticipation[]
-}
-
-model SessionParticipation {
-  sessionId Int
-  userId    Int
-  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([sessionId, userId])
-}
+```powershell
+docker compose --profile test up -d --wait postgres-test
+cd backend
+npm run test:db:migrate
 ```
 
-## Development Scripts
+La base `yogastudio_test` utilise le port 5433 et son propre volume. Les intÃ©grations refusent de commencer si l'adresse pointe vers une autre base. Chaque cas crÃ©e des fixtures puis supprime uniquement ses comptes et sÃ©ances. Ne pas exÃ©cuter simultanÃ©ment les intÃ©grations back et Cypress : ils partagent cette base de test.
 
-### Backend
+Depuis `backend`, puis sÃ©parÃ©ment depuis `frontend` :
 
-```bash
-npm run dev          # Start development server with nodemon
-npm run build        # Build TypeScript to JavaScript
-npm start            # Start production server
-npm run prisma:generate  # Generate Prisma client
-npm run prisma:migrate   # Run database migrations
-npm run prisma:seed      # Seed the database
-npm run prisma:studio    # Open Prisma Studio
+```powershell
+npm run test:run
+npm run test:coverage
+npm run test:ratio
+npm run test:typecheck
 ```
 
-### Frontend
+`test:run` exÃ©cute tous les cas une fois ; `test` les surveille ; `test:unit` et `test:integration` exÃ©cutent uniquement la catÃ©gorie choisie. Le contrÃ´le TypeScript inclut les tests : Vitest seul transforme TypeScript sans vÃ©rifier tous les types.
 
-```bash
-npm run dev          # Start Vite development server
-npm run build        # Build for production
-npm run preview      # Preview production build
+`test:coverage` impose au moins 80 % en instructions, branches, fonctions et lignes. Le rapport JSON des cas permet Ã  `test:ratio` de vÃ©rifier au moins 30 % d'intÃ©gration en comptant les cas exÃ©cutÃ©s, y compris chaque ligne des tests paramÃ©trÃ©s. ExÃ©cuter la suite complÃ¨te avant ce contrÃ´le : un rapport d'une seule catÃ©gorie n'est pas un rÃ©sultat final.
+
+## Parcours E2E et couverture Cypress
+
+Cypress est l'outil prÃ©vu par les consignes P4 ; Playwright Ã©tait Ã©galement autorisÃ©. Nightwatch, utilisÃ© dans la formation, n'est pas utilisÃ© dans ce dÃ©pÃ´t.
+
+PrÃ©parer PostgreSQL de test et ses migrations comme ci-dessus. Dans un premier terminal, depuis `backend` :
+
+```powershell
+npm run dev:e2e
 ```
 
-## Project Structure
+Dans un deuxiÃ¨me terminal, depuis `frontend` :
 
-```
-p4-dfsjs-starter/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/      # Request handlers
-│   │   ├── middleware/       # Auth middleware
-│   │   ├── dto/              # Zod validation schemas
-│   │   ├── utils/            # JWT utilities
-│   │   ├── routes/           # API routes
-│   │   └── app.ts            # Express app setup
-│   ├── prisma/
-│   │   ├── schema.prisma     # Database schema
-│   │   └── seed.ts           # Database seeding
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── .env
-├── frontend/
-│   ├── src/
-│   │   ├── pages/            # React page components
-│   │   ├── components/       # Reusable components
-│   │   ├── services/         # API services
-│   │   ├── types/            # TypeScript types
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── tailwind.config.js
-├── docker-compose.yml
-└── README.md
+```powershell
+npm run dev:e2e
 ```
 
-## Testing
+Cette combinaison lance l'API de test sur **8081**, puis le front instrumentÃ© sur **5173**, avec un proxy vers 8081. Les variables de test sont imposÃ©es par les scripts ; les E2E ne passent pas par l'API de dÃ©veloppement sur 8080.
 
-The project supports comprehensive testing with the following frameworks:
-- **Unit tests**: For testing individual components and utilities
-- **Integration tests**: For testing API endpoints
-- **End-to-end tests**: For testing critical user flows
+Dans un troisiÃ¨me terminal, depuis `frontend` :
 
-Run tests with the appropriate npm scripts in each directory.
-
-## Troubleshooting
-
-### Database connection issues
-```bash
-# Check if PostgreSQL is running
-docker ps
-
-# Restart PostgreSQL
-docker-compose restart postgres
-
-# View logs
-docker-compose logs postgres
+```powershell
+npm run e2e:run
+npm run e2e:coverage:check
+npm run e2e:typecheck
 ```
 
-### Port already in use
-```bash
-# Check what's using port 8080
-lsof -i :8080
+`e2e:open` ouvre l'interface Cypress. `e2e:run -- --browser chrome` utilise Chrome s'il est installÃ© ; le navigateur embarquÃ© fonctionne aussi. En cas d'absence du binaire Cypress aprÃ¨s installation : `npx cypress install` puis `npx cypress verify`.
 
-# Check what's using port 3000
-lsof -i :3000
+Chaque parcours prÃ©pare ses comptes et sÃ©ances dÃ©diÃ©s (`@e2e.test`) via une tÃ¢che Node ; seules ces fixtures sont rÃ©initialisÃ©es. Les parcours de connexion, inscription, suppression, crÃ©ation, Ã©dition et participation utilisent la vraie API de test. Les pannes HTTP et la rÃ©ponse de promotion en dÃ©veloppement sont simulÃ©es explicitement avec `cy.intercept` ; le serveur de test refuse la promotion rÃ©elle.
 
-# Kill the process if needed
-kill -9 <PID>
-```
+Istanbul ajoute des compteurs au front uniquement avec `VITE_COVERAGE=true`. Le plugin Cypress les collecte et NYC gÃ©nÃ¨re le rapport. Un hook avant chaque exÃ©cution efface les compteurs du lancement prÃ©cÃ©dent pour Ã©viter une couverture cumulÃ©e artificiellement. Le contrÃ´le E2E exige les quatre seuils Ã  80 % et vÃ©rifie que tous les fichiers exÃ©cutables de `src` figurent dans le rapport.
 
-### Prisma issues
-```bash
-# Reset database (WARNING: deletes all data)
-npx prisma migrate reset
+## Rapports et rÃ©sultats
 
-# Regenerate Prisma client
-npx prisma generate
-```
+Les rapports gÃ©nÃ©rÃ©s restent hors Git, ainsi que les captures Cypress et les donnÃ©es NYC. Ils sont reproductibles avec les commandes ci-dessus.
 
-## Contributing
+| Suite | Rapport HTML | RÃ©sultats dÃ©taillÃ©s |
+| --- | --- | --- |
+| Front | `frontend/coverage/vitest/index.html` | `coverage-summary.json`, `test-results.json`, `lcov.info` dans le mÃªme dossier |
+| Back | `backend/coverage/index.html` | `coverage-summary.json`, `test-results.json`, `lcov.info` dans le mÃªme dossier |
+| E2E | `frontend/coverage/e2e/index.html` | `coverage-summary.json`, `lcov.info` dans le mÃªme dossier |
 
-Please follow the existing code style and ensure all tests pass before submitting changes.
+DerniÃ¨re validation : 12/10/2026.
 
-## License
+| Suite | Cas rÃ©ussis | IntÃ©gration | Instructions | Branches | Fonctions | Lignes |
+| --- | --- | --- | --- | --- | --- | --- |
+| Front | 86 | 65/86 = 75,58 % | 98,68 % | 97,10 % | 100 % | 99,65 % |
+| Back | 132 | 65/132 = 49,24 % | 100 % | 97,41 % | 100 % | 100 % |
+| E2E | Ã€ confirmer aprÃ¨s le lancement final | Parcours navigateur | Ã€ confirmer | Ã€ confirmer | Ã€ confirmer | Ã€ confirmer |
 
-MIT
+Les intÃ©grations back comprennent 63 cas avec PostgreSQL et 2 contrÃ´les HTTP initiaux. Les seuils concernent chaque indicateur et chaque suite sÃ©parÃ©ment, pas une moyenne entre front, back et E2E.
+
+## Builds et contrÃ´les
+
+Depuis chaque dossier `backend` et `frontend` : `npm run build`. Pour prÃ©visualiser le front compilÃ© : `npm run preview` (adresse affichÃ©e par Vite). L'API de dÃ©veloppement doit tourner pour les requÃªtes de cette prÃ©visualisation.
+
+En cas d'erreur de connexion : `docker compose --profile test ps`, puis `docker compose logs postgres-test`. Relancer `npm run test:db:migrate` aprÃ¨s recrÃ©ation du volume de test. Si un port est occupÃ©, arrÃªter le serveur concernÃ© ; un front temporaire peut utiliser `npm run dev:e2e -- --port 5174`, puis Cypress `npm run e2e:run -- --config baseUrl=http://localhost:5174`.
+
+## Organisation des fichiers
+
+- `frontend/src` : pages, composants, services, modÃ¨les TypeScript.
+- `frontend/tests/unit` et `tests/integration` : suites Vitest ; `tests/helpers.tsx` : fixtures et routeur de test.
+- `frontend/cypress` : parcours et collecte ; `frontend/scripts` : nettoyage et contrÃ´le de couverture E2E.
+- `backend/src` : controllers, services, repositories, middleware, utilitaires ; `app.ts` exporte Express, `server.ts` lance l'Ã©coute.
+- `backend/tests` : unitÃ©s, intÃ©grations, fixtures et protection de la base ; `backend/scripts` : migrations/base/serveur E2E.
+- `scripts/check-integration-ratio.cjs` : contrÃ´le de la proportion d'intÃ©grations Ã  partir des rapports JSON.
+- `backend/prisma` : schÃ©ma, migrations et seed de dÃ©veloppement.
+
+Les enseignants sont consultables via `/api/teacher` et `/api/teacher/:id`. Les autres groupes de routes sont `/api/auth`, `/api/session` et `/api/user`. Les mutations de sÃ©ances exigent le rÃ´le administrateur ; la suppression de compte exige son propriÃ©taire. La promotion existante `/api/user/promote-admin` fonctionne uniquement en dÃ©veloppement.
