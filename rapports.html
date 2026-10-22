@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Rapports de couverture front, back et E2E du projet Yoga Studio.">
+  <title>Rapports de tests — Yoga Studio</title>
+  <style>
+    :root{color-scheme:light;--paper:#f7f8f3;--ink:#1c352c;--muted:#52675e;--line:#dce3d9;--accent:#dcefad}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6}
+    a{color:inherit;text-underline-offset:3px}a:focus-visible,summary:focus-visible{outline:3px solid #687d2c;outline-offset:5px;border-radius:3px}
+    .shell{width:min(1180px,calc(100% - 48px));margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:26px 0;border-bottom:1px solid var(--line)}
+    .brand{font-size:14px;font-weight:750;letter-spacing:.12em;display:flex;align-items:center;gap:12px}.mark{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--accent);font-size:18px}
+    .date{color:var(--muted);font-size:13px}header{padding:32px 0 22px}.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+    h1{font-size:clamp(34px,4vw,48px);line-height:1.1;letter-spacing:-.045em;font-weight:650;margin:14px 0 20px}.intro{max-width:650px;font-size:17px;color:var(--muted);margin:0}
+    .facts{display:flex;gap:36px;flex-wrap:wrap;padding:12px 0 24px;font-size:14px}.facts strong{font-size:22px;font-weight:650;margin-right:7px}.facts span{color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:start}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 4px 16px #26392b04}
+    .card-top{display:flex;justify-content:space-between;align-items:center;gap:8px}.number{font-size:13px;font-weight:700;color:var(--muted)}.badge{font-size:11px;font-weight:700;background:#eff5e4;color:#395228;padding:5px 10px;border-radius:30px}
+    h2{font-size:30px;letter-spacing:-.025em;font-weight:650;margin:20px 0 2px}.tool{font-size:12px;color:var(--muted);margin:0}.scope{font-size:12px;margin:14px 0 20px;color:var(--muted);min-height:20px}
+    .metrics{margin:0 0 22px}.metrics div{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #edf0e9}.metrics dt{font-size:13px;color:var(--muted)}.metrics dd{margin:0;font-size:16px;font-weight:650;font-variant-numeric:tabular-nums}
+    .button{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 15px;border-radius:9px;background:var(--ink);color:#fff;text-decoration:none;font-size:13px;font-weight:650}.button:hover{background:#315444}.button span{color:var(--accent);font-size:19px}
+    details{margin-top:18px;border-bottom:1px solid var(--line);padding-bottom:16px}summary{cursor:pointer;font-size:13px;color:var(--muted)}.sources{padding-left:17px;font-size:12px;overflow-wrap:anywhere}.sources li{margin:7px 0}.downloads{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:11px;color:var(--muted);padding-top:15px}
+    .help{margin:30px 0 40px;padding:22px 26px;background:#eaf0df;border-radius:14px;display:grid;grid-template-columns:1fr 2fr;gap:22px;font-size:13px}.help h2{font-size:16px;margin:0}.help p{margin:0;color:#405448}
+    footer{border-top:1px solid var(--line);padding:22px 0 32px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}code{font-size:12px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}.card{padding:24px}.help{grid-template-columns:1fr;gap:8px}.scope{min-height:0}}
+    @media(max-width:480px){.shell{width:calc(100% - 32px)}.topbar{align-items:flex-start;flex-direction:column;gap:8px}header{padding-top:36px}.facts{gap:12px 24px}}
+    @media print{body{background:white}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.card{padding:15px;box-shadow:none}.button{background:none;color:var(--ink);border:1px solid var(--line)}.downloads,details{display:none}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar"><div class="brand"><span class="mark" aria-hidden="true">Y</span>YOGA STUDIO</div><span class="date">Validation du <time datetime="2026-10-22T11:05:11.024Z">22/10/2026</time></span></div>
+  <header><div class="eyebrow">Projet P4 · Qualité du code</div><h1>Rapports de tests</h1><p class="intro">Trois suites complémentaires pour vérifier les comportements de l’application. Choisissez un rapport ou accédez directement au détail d’un fichier.</p></header>
+  <div class="facts"><div><strong>3</strong><span>rapports complets</span></div><div><strong>80 %</strong><span>minimum par indicateur</span></div><div><strong>Hors ligne</strong><span>consultation sans installation</span></div></div>
+  <main aria-label="Rapports de couverture"><div class="grid">
+    <article class="card" aria-labelledby="front-title">
+      <div class="card-top"><span class="number">01</span><span class="badge">Seuils atteints</span></div>
+      <h2 id="front-title">Front</h2>
+      <p class="tool">Vitest · React Testing Library</p>
+      <p class="scope">86 tests réussis · 65 intégrations</p>
+      <dl class="metrics"><div><dt>Instructions</dt><dd>98,68 %</dd></div><div><dt>Branches</dt><dd>97,1 %</dd></div><div><dt>Fonctions</dt><dd>100 %</dd></div><div><dt>Lignes</dt><dd>99,65 %</dd></div></dl>
+      <a class="button" href="rapports/front/index.html">Explorer le rapport <span aria-hidden="true">↗</span></a>
+      <details><summary>11 fichiers couverts</summary><ul class="sources"><li><a href="rapports/front/src/App.tsx.html">src/App.tsx</a></li><li><a href="rapports/front/src/components/Navbar.tsx.html">src/components/Navbar.tsx</a></li><li><a href="rapports/front/src/main.tsx.html">src/main.tsx</a></li><li><a href="rapports/front/src/pages/Login.tsx.html">src/pages/Login.tsx</a></li><li><a href="rapports/front/src/pages/Profile.tsx.html">src/pages/Profile.tsx</a></li><li><a href="rapports/front/src/pages/Register.tsx.html">src/pages/Register.tsx</a></li><li><a href="rapports/front/src/pages/SessionDetail.tsx.html">src/pages/SessionDetail.tsx</a></li><li><a href="rapports/front/src/pages/SessionForm.tsx.html">src/pages/SessionForm.tsx</a></li><li><a href="rapports/front/src/pages/Sessions.tsx.html">src/pages/Sessions.tsx</a></li><li><a href="rapports/front/src/services/api.ts.html">src/services/api.ts</a></li><li><a href="rapports/front/src/services/auth.service.ts.html">src/services/auth.service.ts</a></li></ul></details>
+      <div class="downloads"><a href="rapports/front/coverage-summary.json">Synthèse JSON</a><a href="rapports/front/lcov.info">LCOV</a><a href="rapports/front/test-results.json">Résultats des tests</a></div>
+    </article>
+    <article class="card" aria-labelledby="back-title">
+      <div class="card-top"><span class="number">02</span><span class="badge">Seuils atteints</span></div>
+      <h2 id="back-title">Back</h2>
+      <p class="tool">Vitest · Supertest · PostgreSQL</p>
+      <p class="scope">149 tests réussis · 76 intégrations</p>
+      <dl class="metrics"><div><dt>Instructions</dt><dd>100 %</dd></div><div><dt>Branches</dt><dd>97,5 %</dd></div><div><dt>Fonctions</dt><dd>100 %</dd></div><div><dt>Lignes</dt><dd>100 %</dd></div></dl>
+      <a class="button" href="rapports/back/index.html">Explorer le rapport <span aria-hidden="true">↗</span></a>
+      <details><summary>25 fichiers couverts</summary><ul class="sources"><li><a href="rapports/back/src/app.ts.html">src/app.ts</a></li><li><a href="rapports/back/src/controllers/auth.controller.ts.html">src/controllers/auth.controller.ts</a></li><li><a href="rapports/back/src/controllers/session.controller.ts.html">src/controllers/session.controller.ts</a></li><li><a href="rapports/back/src/controllers/teacher.controller.ts.html">src/controllers/teacher.controller.ts</a></li><li><a href="rapports/back/src/controllers/user.controller.ts.html">src/controllers/user.controller.ts</a></li><li><a href="rapports/back/src/database/prisma.ts.html">src/database/prisma.ts</a></li><li><a href="rapports/back/src/middleware/auth.middleware.ts.html">src/middleware/auth.middleware.ts</a></li><li><a href="rapports/back/src/middleware/error.middleware.ts.html">src/middleware/error.middleware.ts</a></li><li><a href="rapports/back/src/repositories/participation.repository.ts.html">src/repositories/participation.repository.ts</a></li><li><a href="rapports/back/src/repositories/session.repository.ts.html">src/repositories/session.repository.ts</a></li><li><a href="rapports/back/src/repositories/teacher.repository.ts.html">src/repositories/teacher.repository.ts</a></li><li><a href="rapports/back/src/repositories/user.repository.ts.html">src/repositories/user.repository.ts</a></li><li><a href="rapports/back/src/routes/index.ts.html">src/routes/index.ts</a></li><li><a href="rapports/back/src/services/auth.service.ts.html">src/services/auth.service.ts</a></li><li><a href="rapports/back/src/services/participation.service.ts.html">src/services/participation.service.ts</a></li><li><a href="rapports/back/src/services/session.mapper.ts.html">src/services/session.mapper.ts</a></li><li><a href="rapports/back/src/services/session.service.ts.html">src/services/session.service.ts</a></li><li><a href="rapports/back/src/services/teacher.service.ts.html">src/services/teacher.service.ts</a></li><li><a href="rapports/back/src/services/user.mapper.ts.html">src/services/user.mapper.ts</a></li><li><a href="rapports/back/src/services/user.service.ts.html">src/services/user.service.ts</a></li><li><a href="rapports/back/src/utils/app-error.ts.html">src/utils/app-error.ts</a></li><li><a href="rapports/back/src/utils/async-handler.ts.html">src/utils/async-handler.ts</a></li><li><a href="rapports/back/src/utils/duplicate-email-error.ts.html">src/utils/duplicate-email-error.ts</a></li><li><a href="rapports/back/src/utils/jwt.util.ts.html">src/utils/jwt.util.ts</a></li><li><a href="rapports/back/src/utils/parse-input.ts.html">src/utils/parse-input.ts</a></li></ul></details>
+      <div class="downloads"><a href="rapports/back/coverage-summary.json">Synthèse JSON</a><a href="rapports/back/lcov.info">LCOV</a><a href="rapports/back/test-results.json">Résultats des tests</a></div>
+    </article>
+    <article class="card" aria-labelledby="e2e-title">
+      <div class="card-top"><span class="number">03</span><span class="badge">Seuils atteints</span></div>
+      <h2 id="e2e-title">E2E</h2>
+      <p class="tool">Cypress · Istanbul · NYC</p>
+      <p class="scope">Parcours dans un vrai navigateur</p>
+      <dl class="metrics"><div><dt>Instructions</dt><dd>97,94 %</dd></div><div><dt>Branches</dt><dd>91 %</dd></div><div><dt>Fonctions</dt><dd>100 %</dd></div><div><dt>Lignes</dt><dd>99,03 %</dd></div></dl>
+      <a class="button" href="rapports/e2e/index.html">Explorer le rapport <span aria-hidden="true">↗</span></a>
+      <details><summary>11 fichiers couverts</summary><ul class="sources"><li><a href="rapports/e2e/src/App.tsx.html">src/App.tsx</a></li><li><a href="rapports/e2e/src/components/Navbar.tsx.html">src/components/Navbar.tsx</a></li><li><a href="rapports/e2e/src/main.tsx.html">src/main.tsx</a></li><li><a href="rapports/e2e/src/pages/Login.tsx.html">src/pages/Login.tsx</a></li><li><a href="rapports/e2e/src/pages/Profile.tsx.html">src/pages/Profile.tsx</a></li><li><a href="rapports/e2e/src/pages/Register.tsx.html">src/pages/Register.tsx</a></li><li><a href="rapports/e2e/src/pages/SessionDetail.tsx.html">src/pages/SessionDetail.tsx</a></li><li><a href="rapports/e2e/src/pages/SessionForm.tsx.html">src/pages/SessionForm.tsx</a></li><li><a href="rapports/e2e/src/pages/Sessions.tsx.html">src/pages/Sessions.tsx</a></li><li><a href="rapports/e2e/src/services/api.ts.html">src/services/api.ts</a></li><li><a href="rapports/e2e/src/services/auth.service.ts.html">src/services/auth.service.ts</a></li></ul></details>
+      <div class="downloads"><a href="rapports/e2e/coverage-summary.json">Synthèse JSON</a><a href="rapports/e2e/lcov.info">LCOV</a></div>
+    </article>
+  </div><aside class="help"><h2>Comment lire un rapport ?</h2><p>Ouvrez une suite, puis un fichier pour voir les lignes exécutées, les branches et les portions non couvertes. Les pourcentages sont calculés pour chaque suite ; une couverture élevée ne garantit pas l’absence de bugs.</p></aside></main>
+  <footer><span>Code vérifié : <code>1809186</code> · Copies datées, conservées dans le dépôt.</span><a href="rapports/manifest.json">Détails de la validation</a></footer>
+</div>
+</body>
+</html>

@@ -100,7 +100,25 @@ Vite ignore les dossiers de rapports et de compteurs dans sa surveillance : leur
 
 ## Rapports et résultats
 
-Les rapports générés restent hors Git, ainsi que les captures Cypress et les données NYC. Ils sont reproductibles avec les commandes ci-dessus.
+Les rapports complets du **22/10/2026**, vérifiés sur le code du commit `1809186`, sont conservés dans `rapports/front`, `rapports/back` et `rapports/e2e`. Après un clone ou un pull, ouvrir **[rapports.html](rapports.html)** par double-clic dans un navigateur, ou lancer depuis la racine du dépôt :
+
+```powershell
+Start-Process .\rapports.html
+```
+
+La page donne accès aux trois rapports, aux fichiers de code couverts et aux synthèses JSON/LCOV. Elle fonctionne **hors ligne**, sans npm, Docker ni serveur. Sur GitHub, télécharger/cloner le dépôt pour consulter le HTML dans un navigateur.
+
+Les copies versionnées sont indépendantes de l'application : aucune route React/Express ni commande de démarrage n'est modifiée. `rapports/manifest.json` conserve la date, le commit du code vérifié et son empreinte SHA-256. Le commit indiqué désigne le code testé ; le commit qui ajoute les copies de rapports est nécessairement ultérieur.
+
+Pour actualiser les copies : rejouer les trois suites complètes avec les commandes ci-dessus, vérifier leur succès et `e2e:coverage:check`, puis exécuter depuis la racine :
+
+```powershell
+node scripts/export-reports.cjs
+```
+
+Ce script recopie tous les fichiers nécessaires, actualise `rapports.html` et les métadonnées, et contrôle les seuils de couverture et les résultats/ratios Vitest. Il ne lance pas les tests. Inclure ensuite `rapports/` et `rapports.html` dans le commit de mise à jour.
+
+Les sorties de travail dans `frontend/coverage` et `backend/coverage` restent ignorées par Git, ainsi que les captures Cypress et les données NYC. Les chemins ci-dessous servent à consulter ces sorties après une nouvelle exécution :
 
 | Suite | Rapport HTML | Résultats détaillés |
 | --- | --- | --- |

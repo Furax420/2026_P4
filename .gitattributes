@@ -1,0 +1,4 @@
+# Preserve generated reports exactly and collapse their diffs on GitHub.
+/rapports/** -text -whitespace linguist-generated=true
+/rapports.html text eol=lf linguist-generated=true
+/scripts/export-reports.cjs text eol=lf
