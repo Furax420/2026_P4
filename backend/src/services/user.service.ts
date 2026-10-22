@@ -6,7 +6,11 @@ import { toUserProfile } from './user.mapper';
 export class UserService {
   constructor(private readonly users: UserRepository = userRepository) {}
 
-  async getById(id: number): Promise<UserProfile> {
+  async getById(requesterId: number | undefined, id: number): Promise<UserProfile> {
+    // A valid token does not grant access to another user's profile.
+    if (requesterId !== id) {
+      throw new AppError('You can only view your own account', 403);
+    }
     const user = await this.users.findById(id);
     if (!user) throw new AppError('User not found', 404);
     return toUserProfile(user);

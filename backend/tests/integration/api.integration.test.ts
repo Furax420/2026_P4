@@ -324,23 +324,63 @@ describe("API and PostgreSQL integration", (): void => {
       .set(auth())
       .expect(404);
   });
-  it("joins and exposes only participant identifiers", async (): Promise<void> => {
-    await request(app)
-      .post(`/api/session/${sessionId}/participate/${userId}`)
-      .set("Authorization", `Bearer ${userToken}`)
-      .expect(200);
-    const result = await request(app)
-      .get(`/api/session/${sessionId}`)
-      .set(auth())
-      .expect(200);
-    expect(result.body.users).toEqual([userId]);
-  });
+  it.each([false, true])(
+    "joins and leaves only its own participation (admin: %s)",
+    async (admin): Promise<void> => {
+      const id = admin ? adminId : userId;
+      const token = admin ? adminToken : userToken;
+      await request(app)
+        .post(`/api/session/${sessionId}/participate/${id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      const result = await request(app)
+        .get(`/api/session/${sessionId}`)
+        .set(auth())
+        .expect(200);
+      expect(result.body.users).toEqual([id]);
+      await request(app)
+        .delete(`/api/session/${sessionId}/participate/${id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      expect(await prisma.sessionParticipation.count({ where: { sessionId } })).toBe(0);
+    },
+  );
+  for (const method of ["post", "delete"] as const) {
+    it.each([false, true])(
+      `refuses ${method} on another user's participation (admin: %s)`,
+      async (admin): Promise<void> => {
+        const targetId = admin ? userId : adminId;
+        const token = admin ? adminToken : userToken;
+        if (method === "delete") {
+          await prisma.sessionParticipation.create({ data: { sessionId, userId: targetId } });
+        }
+        // The URL cannot override the identity established by the JWT.
+        await request(app)[method](`/api/session/${sessionId}/participate/${targetId}`)
+          .set("Authorization", `Bearer ${token}`)
+          .expect(403);
+        expect(await prisma.sessionParticipation.count({ where: { sessionId } })).toBe(
+          method === "delete" ? 1 : 0,
+        );
+      },
+    );
+  }
+  it.each(["profile", "join", "leave"] as const)(
+    "requires authentication for %s",
+    async (action): Promise<void> => {
+      if (action === "profile") {
+        await request(app).get(`/api/user/${userId}`).expect(401);
+      } else {
+        const method = action === "join" ? "post" : "delete";
+        await request(app)[method](`/api/session/${sessionId}/participate/${userId}`).expect(401);
+      }
+    },
+  );
   it("rejects duplicate participation, including simultaneous requests", async (): Promise<void> => {
     const results = await Promise.all(
       [0, 1].map(() =>
         request(app)
           .post(`/api/session/${sessionId}/participate/${userId}`)
-          .set(auth()),
+          .set("Authorization", `Bearer ${userToken}`),
       ),
     );
     expect(results.map((result) => result.status).sort()).toEqual([200, 400]);
@@ -354,7 +394,7 @@ describe("API and PostgreSQL integration", (): void => {
       [0, 1].map(() =>
         request(app)
           .delete(`/api/session/${sessionId}/participate/${userId}`)
-          .set(auth()),
+          .set("Authorization", `Bearer ${userToken}`),
       ),
     );
     expect(results.map((result) => result.status).sort()).toEqual([200, 404]);
@@ -362,25 +402,25 @@ describe("API and PostgreSQL integration", (): void => {
   it("rejects joining an unknown session", async (): Promise<void> => {
     await request(app)
       .post(`/api/session/2147483647/participate/${userId}`)
-      .set(auth())
+      .set("Authorization", `Bearer ${userToken}`)
       .expect(404);
   });
   it("rejects joining with an unknown user", async (): Promise<void> => {
     await request(app)
       .post(`/api/session/${sessionId}/participate/2147483647`)
-      .set(auth())
+      .set("Authorization", `Bearer ${generateToken(2147483647)}`)
       .expect(404);
   });
   it("validates the participant identifier", async (): Promise<void> => {
     await request(app)
       .post(`/api/session/${sessionId}/participate/1abc`)
-      .set(auth())
+      .set("Authorization", `Bearer ${userToken}`)
       .expect(400);
   });
   it("reports an absent participation", async (): Promise<void> => {
     await request(app)
       .delete(`/api/session/${sessionId}/participate/${userId}`)
-      .set(auth())
+      .set("Authorization", `Bearer ${userToken}`)
       .expect(404);
   });
 
@@ -397,16 +437,37 @@ describe("API and PostgreSQL integration", (): void => {
   it("validates teacher identifiers", async (): Promise<void> => {
     await request(app).get("/api/teacher/abc").set(auth()).expect(400);
   });
-  it("reads a profile without exposing its password", async (): Promise<void> => {
-    const result = await request(app)
-      .get(`/api/user/${userId}`)
-      .set(auth())
-      .expect(200);
-    expect(result.body.email).toBe(`user${domain}`);
-    expect(result.body).not.toHaveProperty("password");
-  });
+  it.each([false, true])(
+    "reads its own profile without exposing its password (admin: %s)",
+    async (admin): Promise<void> => {
+      const id = admin ? adminId : userId;
+      const token = admin ? adminToken : userToken;
+      const result = await request(app)
+        .get(`/api/user/${id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(200);
+      expect(result.body.email).toBe(`${admin ? "admin" : "user"}${domain}`);
+      expect(result.body).not.toHaveProperty("password");
+    },
+  );
+  it.each([false, true])(
+    "refuses reading another profile (admin: %s)",
+    async (admin): Promise<void> => {
+      const id = admin ? userId : adminId;
+      const token = admin ? adminToken : userToken;
+      const result = await request(app)
+        .get(`/api/user/${id}`)
+        .set("Authorization", `Bearer ${token}`)
+        .expect(403);
+      expect(result.body).not.toHaveProperty("email");
+      expect(result.body).not.toHaveProperty("password");
+    },
+  );
   it("reports an unknown profile", async (): Promise<void> => {
-    await request(app).get("/api/user/2147483647").set(auth()).expect(404);
+    await request(app)
+      .get("/api/user/2147483647")
+      .set("Authorization", `Bearer ${generateToken(2147483647)}`)
+      .expect(404);
   });
   it("validates profile identifiers", async (): Promise<void> => {
     await request(app).get("/api/user/abc").set(auth()).expect(400);

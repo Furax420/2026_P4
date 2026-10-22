@@ -101,13 +101,22 @@ describe("Business services", (): void => {
   );
 
   it("returns a public profile", async (): Promise<void> => {
-    const result = await new UserService(users).getById(1);
+    const result = await new UserService(users).getById(1, 1);
     expect(result.id).toBe(1);
     expect(result).not.toHaveProperty("password");
   });
+  it.each([undefined, 2])(
+    "refuses reading another profile: %s",
+    async (requester): Promise<void> => {
+      await expect(
+        new UserService(users).getById(requester, 1),
+      ).rejects.toMatchObject({ statusCode: 403 });
+      expect(users.findById).not.toHaveBeenCalled();
+    },
+  );
   it("reports an unknown profile", async (): Promise<void> => {
     vi.mocked(users.findById).mockResolvedValue(null);
-    await expect(new UserService(users).getById(1)).rejects.toMatchObject({
+    await expect(new UserService(users).getById(1, 1)).rejects.toMatchObject({
       statusCode: 404,
     });
   });
@@ -271,10 +280,30 @@ describe("Business services", (): void => {
     },
   );
 
+  for (const action of ["participate", "unparticipate"] as const) {
+    it.each([undefined, 2])(
+      `refuses ${action} for another user: %s`,
+      async (requester): Promise<void> => {
+        const create = vi.spyOn(participations, "create").mockResolvedValue(true);
+        const remove = vi.spyOn(participations, "delete").mockResolvedValue(true);
+        const service = new ParticipationService(sessions, users, participations);
+        // Reject the request before any database read or mutation.
+        await expect(service[action](requester, 1, 1)).rejects.toMatchObject({
+          statusCode: 403,
+        });
+        expect(sessions.exists).not.toHaveBeenCalled();
+        expect(users.exists).not.toHaveBeenCalled();
+        expect(create).not.toHaveBeenCalled();
+        expect(remove).not.toHaveBeenCalled();
+      },
+    );
+  }
+
   it("joins an existing session", async (): Promise<void> => {
     vi.spyOn(participations, "create").mockResolvedValue(true);
     await expect(
       new ParticipationService(sessions, users, participations).participate(
+        1,
         1,
         1,
       ),
@@ -286,6 +315,7 @@ describe("Business services", (): void => {
       new ParticipationService(sessions, users, participations).participate(
         1,
         1,
+        1,
       ),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
@@ -295,6 +325,7 @@ describe("Business services", (): void => {
       new ParticipationService(sessions, users, participations).participate(
         1,
         1,
+        1,
       ),
     ).rejects.toMatchObject({ statusCode: 404 });
   });
@@ -302,6 +333,7 @@ describe("Business services", (): void => {
     vi.spyOn(participations, "create").mockResolvedValue(false);
     await expect(
       new ParticipationService(sessions, users, participations).participate(
+        1,
         1,
         1,
       ),
@@ -315,7 +347,7 @@ describe("Business services", (): void => {
         sessions,
         users,
         participations,
-      ).unparticipate(1, 1);
+      ).unparticipate(1, 1, 1);
       if (exists) await expect(result).resolves.toBeUndefined();
       else await expect(result).rejects.toMatchObject({ statusCode: 404 });
     },

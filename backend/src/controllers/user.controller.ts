@@ -9,7 +9,7 @@ export class UserController {
 
   async getById(req: AuthRequest, res: Response): Promise<void> {
     const id = parseInput(UserIdSchema, req.params.id);
-    res.status(200).json(await this.service.getById(id));
+    res.status(200).json(await this.service.getById(req.userId, id));
   }
 
   async delete(req: AuthRequest, res: Response): Promise<void> {

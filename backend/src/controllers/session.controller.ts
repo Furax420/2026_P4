@@ -41,14 +41,14 @@ export class SessionController {
   async participate(req: AuthRequest, res: Response): Promise<void> {
     const id = parseInput(SessionIdSchema, req.params.id);
     const userId = parseInput(UserIdSchema, req.params.userId);
-    await this.participations.participate(id, userId);
+    await this.participations.participate(req.userId, id, userId);
     res.status(200).json({ message: 'Successfully joined the session' });
   }
 
   async unparticipate(req: AuthRequest, res: Response): Promise<void> {
     const id = parseInput(SessionIdSchema, req.params.id);
     const userId = parseInput(UserIdSchema, req.params.userId);
-    await this.participations.unparticipate(id, userId);
+    await this.participations.unparticipate(req.userId, id, userId);
     res.status(200).json({ message: 'Successfully left the session' });
   }
 }

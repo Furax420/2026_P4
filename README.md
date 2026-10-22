@@ -31,7 +31,7 @@ npm ci
 npm run dev
 ```
 
-Front : http://localhost:5173. API : http://localhost:8080/api/health. Le proxy Vite redirige `/api` vers l'API. Le port front est strict : arrêter un serveur existant avant d'en démarrer un second sur ce port.
+Front : http://localhost:5173. API : http://localhost:8080/api/health. Le proxy Vite redirige `/api` vers l'API. Si un ancien `.env` existe, vérifier que `PORT=8080` pour correspondre au proxy Vite. Le port front est strict : arrêter un serveur existant avant d'en démarrer un second sur ce port.
 
 ## Tests front et back
 
@@ -106,17 +106,17 @@ Les rapports générés restent hors Git, ainsi que les captures Cypress et les 
 | --- | --- | --- |
 | Front | `frontend/coverage/vitest/index.html` | `coverage-summary.json`, `test-results.json`, `lcov.info` dans le même dossier |
 | Back | `backend/coverage/index.html` | `coverage-summary.json`, `test-results.json`, `lcov.info` dans le même dossier |
-| E2E | 30 | Parcours navigateur | 97,94 % | 91 % | 100 % | 99,03 % |
+| E2E | `frontend/coverage/e2e/index.html` | `coverage-summary.json`, `lcov.info` dans le même dossier |
 
-Dernière validation : 12/10/2026.
+Dernière validation : 22/10/2026.
 
 | Suite | Cas réussis | Intégration | Instructions | Branches | Fonctions | Lignes |
 | --- | --- | --- | --- | --- | --- | --- |
 | Front | 86 | 65/86 = 75,58 % | 98,68 % | 97,10 % | 100 % | 99,65 % |
-| Back | 132 | 65/132 = 49,24 % | 100 % | 97,41 % | 100 % | 100 % |
+| Back | 149 | 76/149 = 51,01 % | 100 % | 97,50 % | 100 % | 100 % |
 | E2E | 30 | Parcours navigateur | 97,94 % | 91 % | 100 % | 99,03 % |
 
-Les intégrations back comprennent 63 cas avec PostgreSQL et 2 contrôles HTTP initiaux. Les seuils concernent chaque indicateur et chaque suite séparément, pas une moyenne entre front, back et E2E.
+Les intégrations back comprennent 74 cas avec PostgreSQL et 2 contrôles HTTP initiaux. Les tests vérifient notamment le refus de consulter le profil ou de modifier la participation d’un autre utilisateur, y compris pour un administrateur. Les seuils concernent chaque indicateur et chaque suite séparément, pas une moyenne entre front, back et E2E.
 
 ## Builds et contrôles
 
@@ -134,4 +134,4 @@ En cas d'erreur de connexion : `docker compose --profile test ps`, puis `docker 
 - `scripts/check-integration-ratio.cjs` : contrôle de la proportion d'intégrations à partir des rapports JSON.
 - `backend/prisma` : schéma, migrations et seed de développement.
 
-Les enseignants sont consultables via `/api/teacher` et `/api/teacher/:id`. Les autres groupes de routes sont `/api/auth`, `/api/session` et `/api/user`. Les mutations de séances exigent le rôle administrateur ; la suppression de compte exige son propriétaire. La promotion existante `/api/user/promote-admin` fonctionne uniquement en développement.
+Les enseignants sont consultables via `/api/teacher` et `/api/teacher/:id`. Les autres groupes de routes sont `/api/auth`, `/api/session` et `/api/user`. Les mutations de séances exigent le rôle administrateur ; la consultation et la suppression de compte ainsi que la gestion des participations exigent leur propriétaire, même pour un administrateur. La promotion existante `/api/user/promote-admin` fonctionne uniquement en développement.
